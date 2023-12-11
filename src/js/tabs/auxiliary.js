@@ -56,8 +56,8 @@ function inBuildMap(map, name) {
     }
     for (let value of map) {
         if (name == value.buildKey) {
-            for (let y = 0; y < value.buildOption.length; y++) {
-                if (FC.CONFIG.buildOptions.includes(value.buildOption[y])) {
+            for (let option of value.buildOption) {
+                if (FC.CONFIG.buildOptions.includes(option)) {
                     return true;
                 }
             }
@@ -479,9 +479,7 @@ auxiliary.initialize = function (callback) {
                     if (range.start >= range.end) {
                         continue; // invalid!
                     }
-
                     addRangeToMode(newMode, modeRange.auxChannelIndex, modeRangeExtra.modeLogic, range);
-
                 } else {
                     addLinkedToMode(newMode, modeRangeExtra.modeLogic, modeRangeExtra.linkedTo);
                 }
@@ -682,11 +680,9 @@ auxiliary.initialize = function (callback) {
                 if ( ! isSelectedMode(modeList, FC.AUX_CONFIG[i])) {
                     modeElement.toggle( false);
                 }
-                else {
-                    if ( ! isSelectedMode(modeList, FC.AUX_CONFIG[i]) && modeElement.find(' .range').length == 0 && modeElement.find(' .link').length == 0) {
-                        // unused mode
-                        modeElement.toggle(!hideUnused);
-                    }
+                else if ( ! isSelectedMode(modeList, FC.AUX_CONFIG[i]) && modeElement.find(' .range').length == 0 && modeElement.find(' .link').length == 0) {
+                    // unused mode
+                    modeElement.toggle(!hideUnused);
                 }
             }
 
