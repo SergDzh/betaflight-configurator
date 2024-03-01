@@ -6,10 +6,34 @@
 		background-color: #ffcb18;
 		margin-bottom: 10px;
 	}
-	.toolbox {
+	.auxiliary_toolbox {
 		font-weight: bold;
 		color: rgb(105, 99, 99);
-		padding: 10px 5px;
+		padding: 5px 5px 1px;
+	}
+	.auxiliary_category {
+		width: 10%;
+		border-bottom: 0;
+		resize: none;
+	}
+	.auxiliary_category_content {
+		width: 100%;
+	}
+	.auxiliary_category_header {
+		width: 100%;
+		margin-top: 6px;
+		padding: 4px;
+		padding-left: 8px;
+		padding-right: 8px;
+		color: white;
+		border: 1px solid var(--subtleAccent);
+		background-color: rgba(64, 64, 64, 1);
+		resize: none;
+	}
+	.auxiliary_category_select_value {
+		width: 100%;
+		margin-bottom: 10px;
+        margin-top: 10px;
 	}
 	.range {
 		.marker {
@@ -268,6 +292,11 @@
 }
 @media all and (max-width: 575px) {
 	.tab-auxiliary {
+		.auxiliary_category {
+			flex-wrap: wrap;
+			width: 100%;
+			border-bottom: 0;
+		}
 		.mode {
 			flex-wrap: wrap;
 			.info {
