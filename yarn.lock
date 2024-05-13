@@ -11962,6 +11962,11 @@ url@^0.11.0:
     punycode "^1.4.1"
     qs "^6.11.2"
 
+usb-serial-plugin@^0.0.9:
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/usb-serial-plugin/-/usb-serial-plugin-0.0.9.tgz#7441423072b9f08894c289bded9ff884b682b120"
+  integrity sha512-pmjhRU+1Mf8zvsI1ThoL4RVIDH11+gFWQACunSwN1txFbnIj4ZzTtIRlaQKAoMyzII1wLKsXbNIcAFDrcPwOuQ==
+
 use@^3.1.0:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/use/-/use-3.1.1.tgz#d50c8cac79a19fbc20f2911f56eb973f4e10070f"

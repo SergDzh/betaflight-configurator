@@ -1,4 +1,6 @@
 import { webSerialDevices } from "./serial_devices";
+import { UsbSerial } from "usb-serial-plugin";
+import { Capacitor } from "@capacitor/core";
 
 async function* streamAsyncIterable(reader, keepReadingFlag) {
     try {
@@ -49,9 +51,18 @@ class WebSerial extends EventTarget {
 
     async connect(options) {
         this.openRequested = true;
-        this.port = await navigator.serial.requestPort({
-            filters: webSerialDevices,
-        });
+        // TODO this is only a fast way to try to see if it works, there are better ways to do it
+        if (Capacitor.isNativePlatform()) {
+            const usbDevices = await UsbSerial.connectedDevices();
+            if (usbDevices.length > 0) {
+                this.port = usbDevices[0];
+                UsbSerial.open( { device: usbDevices[0].device, baudRate: options.baudRate } );
+            }
+        } else {
+            this.port = await navigator.serial.requestPort({
+                filters: webSerialDevices,
+            });
+        }
 
         await this.port.open(options);
         const connectionInfo = this.port.getInfo();

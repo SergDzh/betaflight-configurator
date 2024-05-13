@@ -58,6 +58,7 @@
     "short-unique-id": "^4.4.4",
     "switchery-latest": "^0.8.2",
     "three": "~0.97.0",
+    "usb-serial-plugin": "^0.0.9",
     "vite-plugin-pwa": "^0.17.4",
     "vue": "^2.7.10"
   },
