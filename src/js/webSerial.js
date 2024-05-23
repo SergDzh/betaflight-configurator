@@ -65,8 +65,7 @@ class WebSerial extends EventTarget {
     }
 
     handleDisconnect() {
-        this.removeEventListener('receive', this.handleReceiveBytes);
-        this.dispatchEvent(new CustomEvent("disconnect", { detail: false }));
+        this.disconnect();
     }
 
     getConnectedPort() {
@@ -75,7 +74,7 @@ class WebSerial extends EventTarget {
 
     createPort(port) {
         return {
-            path: `D${this.port_counter++}`,
+            path: `serial_${this.port_counter++}`,
             displayName: `Betaflight ${vendorIdNames[port.getInfo().usbVendorId]}`,
             vendorId: port.getInfo().usbVendorId,
             productId: port.getInfo().usbProductId,
@@ -130,6 +129,7 @@ class WebSerial extends EventTarget {
             this.failed = 0;
             this.openRequested = false;
 
+            this.port.addEventListener("disconnect", this.handleDisconnect.bind(this));
             this.addEventListener("receive", this.handleReceiveBytes);
 
             console.log(
@@ -186,6 +186,7 @@ class WebSerial extends EventTarget {
         this.bytesSent = 0;
 
         const doCleanup = async () => {
+            this.removeEventListener('receive', this.handleReceiveBytes);
             if (this.reader) {
                 this.reader.releaseLock();
                 this.reader = null;
@@ -195,6 +196,7 @@ class WebSerial extends EventTarget {
                 this.writer = null;
             }
             if (this.port) {
+                this.port.removeEventListener("disconnect", this.handleDisconnect.bind(this));
                 await this.port.close();
                 this.port = null;
             }
@@ -234,7 +236,7 @@ class WebSerial extends EventTarget {
             );
         }
         return {
-            bytesSent: this.bytesSent,
+            bytesSent: data.byteLength,
         };
     }
 }
