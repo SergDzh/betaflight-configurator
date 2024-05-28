@@ -3140,7 +3140,7 @@ osd.initialize = function(callback) {
 
                         if (semver.gte(FC.CONFIG.apiVersion, API_VERSION_1_44) && field.variants && field.variants.length > 0) {
 
-                            const selectVariant = $('<select class="osd-variant" />')
+                            const selectVariant = $('<select class="osd-variant small" />')
                                 .data('field', field)
                                 .on("change", function() {
                                     const fieldChanged = $(this).data('field');
