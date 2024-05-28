@@ -50,99 +50,23 @@ function disconnectHandler(event) {
 }
 
 export function initializeSerialBackend() {
-    GUI.updateManualPortVisibility = function() {
-        if(isWeb()) {
-            return;
-        }
-        const selected_port = $('#port').val();
 
-        $('#port-override-option').toggle(selected_port === 'manual');
-
-        $('#firmware-virtual-option').toggle(selected_port === 'virtual');
-
-        $('#auto-connect-and-baud').toggle(selected_port !== 'DFU');
-    };
-
-    GUI.updateManualPortVisibility();
-
+    // TODO move to Vue
     $('#port-override').change(function () {
         setConfig({'portOverride': $('#port-override').val()});
     });
 
+    // TODO move to Vue
     const data = getConfig('portOverride');
     if (data.portOverride) {
         $('#port-override').val(data.portOverride);
     }
 
-    EventBus.$on('ports-input:change', () => GUI.updateManualPortVisibility());
+    $("div.connect_controls a.connect").on('click', connectDisconnect);
 
-    $("div.connect_controls a.connect").on('click', function () {
-
-        const selectedPort = PortHandler.portPicker.selectedPort;
-        let portName;
-        if (selectedPort === 'manual') {
-            portName = $('#port-override').val();
-        } else {
-            portName = selectedPort;
-        }
-
-        if (!GUI.connect_lock && selectedPort !== 'none') {
-            // GUI control overrides the user control
-
-            GUI.configuration_loaded = false;
-
-            const selected_baud = PortHandler.portPicker.selectedBauds;
-            const selectedPort = portName;
-
-            if (selectedPort === 'DFU') {
-                $('select#baud').hide();
-                return;
-            }
-
-            if (!isConnected) {
-                console.log(`Connecting to: ${portName}`);
-                GUI.connecting_to = portName;
-
-                // lock port select & baud while we are connecting / connected
-                PortHandler.portPickerDisabled = true;
-                $('div.connect_controls div.connect_state').text(i18n.getMessage('connecting'));
-
-                const baudRate = selected_baud;
-                if (selectedPort === 'virtual') {
-                    CONFIGURATOR.virtualMode = true;
-                    CONFIGURATOR.virtualApiVersion = $('#firmware-version-dropdown').val();
-
-                    // Hack to get virtual working on the web
-                    serial = serialShim();
-                    serial.connect('virtual', {}, onOpenVirtual);
-                } else {
-                    CONFIGURATOR.virtualMode = false;
-                    serial = serialShim();
-                    // Explicitly disconnect the event listeners before attaching the new ones.
-                    serial.removeEventListener('connect', connectHandler);
-                    serial.addEventListener('connect', connectHandler);
-
-                    serial.removeEventListener('disconnect', disconnectHandler);
-                    serial.addEventListener('disconnect', disconnectHandler);
-
-                    serial.connect(portName, { baudRate });
-                }
-
-            } else {
-                if ($('div#flashbutton a.flash_state').hasClass('active') && $('div#flashbutton a.flash').hasClass('active')) {
-                    $('div#flashbutton a.flash_state').removeClass('active');
-                    $('div#flashbutton a.flash').removeClass('active');
-                }
-                GUI.timeout_kill_all();
-                GUI.interval_kill_all();
-                GUI.tab_switch_cleanup(() => GUI.tab_switch_in_progress = false);
-
-                function onFinishCallback() {
-                    finishClose(toggleStatus);
-                }
-
-                mspHelper?.setArmingEnabled(true, false, onFinishCallback);
-            }
+    EventBus.$on('port-handler:auto-select-device', function(device) {
+        if (PortHandler.portPicker.autoConnect && !GUI.connected_to && !GUI.connecting_to) {
+            connectDisconnect();
         }
     });
 
@@ -158,22 +82,77 @@ export function initializeSerialBackend() {
         }
     });
 
-    // auto-connect
-    const result = PortHandler.portPicker.autoConnect;
-    if (result === undefined || result) {
-
-        $('input.auto_connect').prop('checked', true);
-        $('input.auto_connect, span.auto_connect').prop('title', i18n.getMessage('autoConnectEnabled'));
-
-        $('select#baud').val(115200).prop('disabled', true);
-    } else {
-
-        $('input.auto_connect').prop('checked', false);
-        $('input.auto_connect, span.auto_connect').prop('title', i18n.getMessage('autoConnectDisabled'));
-    }
-
     PortHandler.initialize();
     PortUsage.initialize();
+}
+
+function connectDisconnect() {
+    const selectedPort = PortHandler.portPicker.selectedPort;
+    let portName;
+    if (selectedPort === 'manual') {
+        portName = PortHandler.portPicker.portOverride;
+    } else {
+        portName = selectedPort;
+    }
+
+    if (!GUI.connect_lock && selectedPort !== 'none') {
+        // GUI control overrides the user control
+
+        GUI.configuration_loaded = false;
+
+        const selected_baud = PortHandler.portPicker.selectedBauds;
+        const selectedPort = portName;
+
+        if (selectedPort === 'DFU') {
+            $('select#baud').hide();
+            return;
+        }
+
+        if (!isConnected) {
+            console.log(`Connecting to: ${portName}`);
+            GUI.connecting_to = portName;
+
+            // lock port select & baud while we are connecting / connected
+            PortHandler.portPickerDisabled = true;
+            $('div.connect_controls div.connect_state').text(i18n.getMessage('connecting'));
+
+            const baudRate = selected_baud;
+            if (selectedPort === 'virtual') {
+                CONFIGURATOR.virtualMode = true;
+                CONFIGURATOR.virtualApiVersion = $('#firmware-version-dropdown').val();
+
+                // Hack to get virtual working on the web
+                serial = serialShim();
+                serial.connect('virtual', {}, onOpenVirtual);
+            } else {
+                CONFIGURATOR.virtualMode = false;
+                serial = serialShim();
+                // Explicitly disconnect the event listeners before attaching the new ones.
+                serial.removeEventListener('connect', connectHandler);
+                serial.addEventListener('connect', connectHandler);
+
+                serial.removeEventListener('disconnect', disconnectHandler);
+                serial.addEventListener('disconnect', disconnectHandler);
+
+                serial.connect(portName, { baudRate });
+            }
+
+        } else {
+            if ($('div#flashbutton a.flash_state').hasClass('active') && $('div#flashbutton a.flash').hasClass('active')) {
+                $('div#flashbutton a.flash_state').removeClass('active');
+                $('div#flashbutton a.flash').removeClass('active');
+            }
+            GUI.timeout_kill_all();
+            GUI.interval_kill_all();
+            GUI.tab_switch_cleanup(() => GUI.tab_switch_in_progress = false);
+
+            function onFinishCallback() {
+                finishClose(toggleStatus);
+            }
+
+            mspHelper?.setArmingEnabled(true, false, onFinishCallback);
+        }
+    }
 }
 
 function finishClose(finishedCallback) {
@@ -228,7 +207,7 @@ function setConnectionTimeout() {
         if (!CONFIGURATOR.connectionValid) {
             gui_log(i18n.getMessage('noConfigurationReceived'));
 
-            $('div.connect_controls a.connect').click(); // disconnect
+            connectDisconnect();
         }
     }, 10000);
 }
@@ -801,7 +780,7 @@ export function reinitializeConnection(callback) {
     if (isVirtual) {
         return setTimeout(() => {
             if (PortHandler.portPicker.autoConnect) {
-                $('a.connect').trigger('click');
+                connectDisconnect();
             }
             if (typeof callback === 'function') {
                 callback();
@@ -832,3 +811,4 @@ export function reinitializeConnection(callback) {
         }
     }
 }
+
